@@ -1,6 +1,39 @@
+# * fetching SWC specific holdings
+# * last n transactions (filtered for SWC)
+
 type ExampleEntity @entity {
   id: ID!
   count: BigInt!
   owner: Bytes! # address
   spender: Bytes! # address
+}
+
+type SWCUser @entitiy {
+  "SW Capital user"
+  id: ID!
+  address: Bytes! # address
+  balance: BigInt!
+}
+
+type Transaction @entity {
+  "Transactions for the tradable tokens by the user"
+  id: ID!
+  transactionReceipt: TransactionReceipt
+}
+type TransactionReceipt @entity {
+  "Receipt of tradable tokens transactions by user"
+  id: ID!
+  transaction: Transaction
+}
+
+type Token @entity {
+  "SW Capital tradable tokens"
+  id: ID!
+  tokenBalances: [TokenBalance!]! @derivedFrom(field: "token")
+}
+type TokenBalance @entity {
+  "Balances for the SWC tradable tokens"
+  id: ID!
+  amount: Int!
+  token: Token!
 }

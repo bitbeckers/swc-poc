@@ -1,6 +1,6 @@
 import { BigInt } from "@graphprotocol/graph-ts"
 import { SWCapital, Approval, Transfer } from "../generated/SWCapital/SWCapital"
-import { ExampleEntity } from "../generated/schema"
+import { ExampleEntity, SWCUser } from "../generated/schema"
 
 export function handleApproval(event: Approval): void {
   // Entities can be loaded from the store using a string ID; this ID

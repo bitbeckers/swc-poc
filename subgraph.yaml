@@ -1,4 +1,4 @@
-specVersion: 0.0.1
+specVersion: 0.0.2
 schema:
   file: ./schema.graphql
 dataSources:
@@ -19,8 +19,44 @@ dataSources:
         - name: SWCapital
           file: ./abis/SWCapital.json
       eventHandlers:
-        - event: Approval(indexed address,indexed address,uint256)
-          handler: handleApproval
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+      file: ./src/mapping.ts
+  - kind: ethereum/contract
+    name: DefiPulse Index
+    network: mainnet
+    source:
+      address: "0x1494CA1F11D487c2bBe4543E90080AeBa4BA3C2b"
+      abi: SetToken
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      entities:
+        - Transfer
+      abis:
+        - name: SetToken
+          file: ./abis/SetToken.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+      file: ./src/mapping.ts
+  - kind: ethereum/contract
+    name: Bankless Bed Index
+    network: mainnet
+    source:
+      address: "0x2aF1dF3AB0ab157e1E2Ad8F88A7D04fbea0c7dc6"
+      abi: SetToken
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      entities:
+        - Transfer
+      abis:
+        - name: SetToken
+          file: ./abis/SetToken.json
+      eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
       file: ./src/mapping.ts
