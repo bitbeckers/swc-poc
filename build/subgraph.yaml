@@ -1,6 +1,6 @@
 specVersion: 0.0.2
 schema:
-  file: ./schema.graphql
+  file: schema.graphql
 dataSources:
   - kind: ethereum/contract
     name: SWCapital
@@ -17,11 +17,11 @@ dataSources:
         - SWCUser
       abis:
         - name: SWCapital
-          file: ./abis/SWCapital.json
+          file: SWCapital/abis/SWCapital.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
-      file: ./src/mapping.ts
+      file: SWCapital/SWCapital.wasm
   - kind: ethereum/contract
     name: DefiPulse Index
     network: mainnet
@@ -36,11 +36,11 @@ dataSources:
         - Transfer
       abis:
         - name: SetToken
-          file: ./abis/SetToken.json
+          file: DefiPulse Index/abis/SetToken.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
-      file: ./src/mapping.ts
+      file: SWCapital/SWCapital.wasm
   - kind: ethereum/contract
     name: Bankless Bed Index
     network: mainnet
@@ -55,8 +55,8 @@ dataSources:
         - Transfer
       abis:
         - name: SetToken
-          file: ./abis/SetToken.json
+          file: Bankless Bed Index/abis/SetToken.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
-      file: ./src/mapping.ts
+      file: SWCapital/SWCapital.wasm

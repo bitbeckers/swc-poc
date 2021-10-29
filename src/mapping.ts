@@ -1,62 +1,79 @@
-import { BigInt } from "@graphprotocol/graph-ts"
-import { SWCapital, Approval, Transfer } from "../generated/SWCapital/SWCapital"
-import { ExampleEntity, SWCUser } from "../generated/schema"
+import { Transfer } from "../generated/SWCapital/SWCapital";
+import {
+  SWCUser,
+  Token,
+  TokenBalance,
+  Transaction,
+  TransactionReceipt,
+} from "../generated/schema";
 
-export function handleApproval(event: Approval): void {
-  // Entities can be loaded from the store using a string ID; this ID
-  // needs to be unique across all entities of the same type
-  let entity = ExampleEntity.load(event.transaction.from.toHex())
-
-  // Entities only exist after they have been saved to the store;
-  // `null` checks allow to create entities on demand
-  if (!entity) {
-    entity = new ExampleEntity(event.transaction.from.toHex())
-
-    // Entity fields can be set using simple assignments
-    entity.count = BigInt.fromI32(0)
+// Every transfer amount to an updated transaction and tokenbalance state
+export function handleTransfer(event: Transfer): void {
+  // User is from or to, depending on sell/buy action
+  // Sell - user if from
+  let user = SWCUser.load(event.params.from.toHex());
+  // Buy - user is to
+  if (!user) {
+    user = SWCUser.load(event.params.to.toHex());
+  }
+  // New user - incoming funds
+  if (!user) {
+    user = new SWCUser(event.params.to.toHex());
+    user.address = event.params.from;
   }
 
-  // BigInt and BigDecimal math are supported
-  entity.count = entity.count + BigInt.fromI32(1)
+  // Store event for tx overview
+  let transactionReceipt = TransactionReceipt.load(
+    event.transaction.hash.toHex() + "-" + event.logIndex.toString()
+  );
+  if (!transactionReceipt) {
+    transactionReceipt = new TransactionReceipt(
+      event.transaction.hash.toHex() + "-" + event.logIndex.toString()
+    );
+    transactionReceipt.from = event.params.from;
+    transactionReceipt.to = event.params.to;
+    transactionReceipt.value = event.params.value;
+    transactionReceipt.token = event.address.toHex();
+  }
 
-  // Entity fields can be set based on event parameters
-  entity.owner = event.params.owner
-  entity.spender = event.params.spender
+  // Create transaction
+  let transaction = Transaction.load(
+    event.transaction.hash.toHex() + "-" + event.logIndex.toString()
+  );
+  if (!transaction) {
+    transaction = new Transaction(
+      event.transaction.hash.toHex() + "-" + event.logIndex.toString()
+    );
+    transaction.user = user.id;
+    transaction.transactionReceipt = transactionReceipt.id;
+  }
 
-  // Entities can be written to the store with `.save()`
-  entity.save()
+  transactionReceipt.transaction = transaction.id;
 
-  // Note: If a handler doesn't require existing field values, it is faster
-  // _not_ to load the entity from the store. Instead, create it fresh with
-  // `new Entity(...)`, set the fields that should be updated and save the
-  // entity back to the store. Fields that were not set or unset remain
-  // unchanged, allowing for partial updates to be applied.
+  // Does the token exist?
+  let token = Token.load(event.address.toHex());
+  if (!token) {
+    token = new Token(event.address.toHex());
+  }
 
-  // It is also possible to access smart contracts from mappings. For
-  // example, the contract that has emitted the event can be connected to
-  // with:
-  //
-  // let contract = Contract.bind(event.address)
-  //
-  // The following functions can then be called on this contract to access
-  // state variables and other data:
-  //
-  // - contract.INITIAL_BALANCE(...)
-  // - contract.NAME(...)
-  // - contract.SYMBOL(...)
-  // - contract.VERSION(...)
-  // - contract.allowance(...)
-  // - contract.approve(...)
-  // - contract.balanceOf(...)
-  // - contract.decimals(...)
-  // - contract.decreaseAllowance(...)
-  // - contract.increaseAllowance(...)
-  // - contract.name(...)
-  // - contract.nonces(...)
-  // - contract.symbol(...)
-  // - contract.totalSupply(...)
-  // - contract.transfer(...)
-  // - contract.transferFrom(...)
+  // Update sender balance
+  let tokenBalanceUser = TokenBalance.load(
+    user.id + "-" + event.address.toHex()
+  );
+  if (!tokenBalanceUser) {
+    tokenBalanceUser = new TokenBalance(user.id + "-" + event.address.toHex());
+    tokenBalanceUser.user = user.id;
+    tokenBalanceUser.token = token.id;
+    tokenBalanceUser.amount = event.params.value;
+  } else if (user.address === event.params.from) {
+    tokenBalanceUser.amount = tokenBalanceUser.amount.minus(event.params.value);
+  } else if (user.address === event.params.to) {
+    tokenBalanceUser.amount = tokenBalanceUser.amount.plus(event.params.value);
+  }
+
+  user.save();
+  token.save();
+  transactionReceipt.save();
+  transaction.save();
+  tokenBalanceUser.save();
 }
-
-export function handleTransfer(event: Transfer): void {}
