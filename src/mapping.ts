@@ -54,6 +54,7 @@ export function handleTransfer(event: Transfer): void {
   let token = Token.load(event.address.toHex());
   if (!token) {
     token = new Token(event.address.toHex());
+    token.save();
   }
 
   // Update sender balance
@@ -72,7 +73,6 @@ export function handleTransfer(event: Transfer): void {
   }
 
   user.save();
-  token.save();
   transactionReceipt.save();
   transaction.save();
   tokenBalanceUser.save();
