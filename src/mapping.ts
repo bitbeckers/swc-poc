@@ -54,6 +54,7 @@ export function handleTransfer(event: Transfer): void {
   let token = Token.load(event.address.toHex());
   if (!token) {
     token = new Token(event.address.toHex());
+    token.address = event.address;
     token.save();
   }
 
@@ -65,11 +66,11 @@ export function handleTransfer(event: Transfer): void {
     tokenBalanceUser = new TokenBalance(user.id + "-" + event.address.toHex());
     tokenBalanceUser.user = user.id;
     tokenBalanceUser.token = token.id;
-    tokenBalanceUser.amount = event.params.value;
+    tokenBalanceUser.balance = event.params.value;
   } else if (user.address === event.params.from) {
-    tokenBalanceUser.amount = tokenBalanceUser.amount.minus(event.params.value);
+    tokenBalanceUser.balance = tokenBalanceUser.balance.minus(event.params.value);
   } else if (user.address === event.params.to) {
-    tokenBalanceUser.amount = tokenBalanceUser.amount.plus(event.params.value);
+    tokenBalanceUser.balance = tokenBalanceUser.balance.plus(event.params.value);
   }
 
   user.save();

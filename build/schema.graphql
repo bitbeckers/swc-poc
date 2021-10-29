@@ -37,6 +37,6 @@ type TokenBalance @entity {
   "Balances for the SWC tradable tokens"
   id: ID!
   user: SWCUser!
-  amount: BigInt!
+  balance: BigInt!
   token: Token!
 }
