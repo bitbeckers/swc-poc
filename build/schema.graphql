@@ -31,6 +31,7 @@ type TransactionReceipt @entity {
 type Token @entity {
   "SW Capital tradable tokens"
   id: ID!
+  address: Bytes!
   tokenBalances: [TokenBalance!]! @derivedFrom(field: "token")
 }
 type TokenBalance @entity {

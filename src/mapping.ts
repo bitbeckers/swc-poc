@@ -6,6 +6,8 @@ import {
   Transaction,
   TransactionReceipt,
 } from "../generated/schema";
+import { Address, ethereum, BigInt } from "@graphprotocol/graph-ts";
+import { newMockEvent } from "matchstick-as";
 
 // Every transfer amount to an updated transaction and tokenbalance state
 export function handleTransfer(event: Transfer): void {
@@ -19,7 +21,7 @@ export function handleTransfer(event: Transfer): void {
   // New user - incoming funds
   if (!user) {
     user = new SWCUser(event.params.to.toHex());
-    user.address = event.params.from;
+    user.address = event.params.to;
   }
 
   // Store event for tx overview
@@ -68,13 +70,55 @@ export function handleTransfer(event: Transfer): void {
     tokenBalanceUser.token = token.id;
     tokenBalanceUser.balance = event.params.value;
   } else if (user.address === event.params.from) {
-    tokenBalanceUser.balance = tokenBalanceUser.balance.minus(event.params.value);
+    tokenBalanceUser.balance = tokenBalanceUser.balance.minus(
+      event.params.value
+    );
   } else if (user.address === event.params.to) {
-    tokenBalanceUser.balance = tokenBalanceUser.balance.plus(event.params.value);
+    tokenBalanceUser.balance = tokenBalanceUser.balance.plus(
+      event.params.value
+    );
   }
 
   user.save();
   transactionReceipt.save();
   transaction.save();
   tokenBalanceUser.save();
+}
+
+export function createTransferEvent(
+  id: string,
+  from: string,
+  to: string,
+  value: BigInt
+): Transfer {
+  let mockEvent = newMockEvent();
+  let transferEvent = new Transfer(
+    mockEvent.address,
+    mockEvent.logIndex,
+    mockEvent.transactionLogIndex,
+    mockEvent.logType,
+    mockEvent.block,
+    mockEvent.transaction,
+    mockEvent.parameters
+  );
+  transferEvent.parameters = new Array();
+
+  let fromParam = new ethereum.EventParam(
+    "from",
+    ethereum.Value.fromAddress(Address.fromString(from))
+  );
+  let toParam = new ethereum.EventParam(
+    "to",
+    ethereum.Value.fromAddress(Address.fromString(to))
+  );
+  let valueParam = new ethereum.EventParam(
+    "value",
+    ethereum.Value.fromUnsignedBigInt(value)
+  );
+
+  transferEvent.parameters.push(fromParam);
+  transferEvent.parameters.push(toParam);
+  transferEvent.parameters.push(valueParam);
+
+  return transferEvent;
 }
